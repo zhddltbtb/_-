@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>영쪼기와 씨앗이의 비밀 낙서장</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Lee Seo Yun (이서윤체) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lee+Seo+Yun&display=swap" rel="stylesheet">
+
+  <style>
+    /* 이서윤체 폰트 적용 */
+    *, body, input, button, select, textarea, h1, h2, h3, h4, p, span, div {
+      font-family: 'Lee Seo Yun', 'LeeSeoYun', sans-serif !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      overscroll-behavior: none;
+      background-color: #fdfbf7;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Custom Scrollbar for side panel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #fef3c7;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #fde047;
+      border-radius: 9999px;
+    }
+
+    /* Floating & Pop Animations */
+    @keyframes float-slow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(3deg); }
+    }
+    .animate-float {
+      animation: float-slow 3s ease-in-out infinite;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* Shake animation for password error */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .animate-shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    canvas {
+      touch-action: none;
+    }
+  </style>
+
+  <!-- Firebase Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Global variables setup
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'secret-doodle-board';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "demo",
+      authDomain: "demo.firebaseapp.com",
+      projectId: "demo",
+      storageBucket: "demo.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:demo"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.fb = { auth, db, appId, collection, doc, setDoc, onSnapshot, getDocs, deleteDoc };
+  </script>
+</head>
+<body class="h-full w-full text-amber-950 flex flex-col justify-between relative overflow-hidden bg-amber-50">
+
+  <!-- ==================== LOCK SCREEN OVERLAY ==================== -->
+  <div id="lockScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-amber-950/60 backdrop-blur-md transition-opacity duration-300">
+    <div class="bg-amber-50 border-4 border-amber-300 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center relative animate-pop">
+      
+      <!-- Mascots Banner -->
+      <div class="flex justify-center items-center gap-3 mb-3">
+        <!-- 영쪼기 SVG -->
+        <div class="w-16 h-16 bg-yellow-200 rounded-full flex items-center justify-center shadow-md border-2 border-yellow-400 animate-float">
+          <svg class="w-12 h-12" viewBox="0 0 100 100">
+            <ellipse cx="50" cy="55" rx="35" ry="32" fill="#FEF08A" stroke="#EAB308" stroke-width="3"/>
+            <circle cx="38" cy="48" r="4" fill="#451a03"/>
+            <circle cx="62" cy="48" r="4" fill="#451a03"/>
+            <ellipse cx="30" cy="56" rx="5" ry="3" fill="#FCA5A5" opacity="0.8"/>
+            <ellipse cx="70" cy="56" rx="5" ry="3" fill="#FCA5A5" opacity="0.8"/>
+            <polygon points="50,50 43,58 57,58" fill="#F97316"/>
+            <path d="M 50 23 Q 46 15 42 20 Q 50 10 52 23" fill="#FEF08A" stroke="#EAB308" stroke-width="2"/>
+          </svg>
+        </div>
+
+        <!-- 씨앗이 SVG -->
+        <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center shadow-md border-2 border-emerald-300 animate-float" style="animation-delay: 0.5s;">
+          <svg class="w-12 h-12" viewBox="0 0 100 100">
+            <path d="M 50 25 C 25 45 25 80 50 80 C 75 80 75 45 50 25 Z" fill="#D97706" stroke="#92400E" stroke-width="3"/>
+            <path d="M 50 35 C 35 50 35 75 50 75 C 65 75 65 50 50 35 Z" fill="#FDE68A"/>
+            <circle cx="43" cy="52" r="3" fill="#451a03"/>
+            <circle cx="57" cy="52" r="3" fill="#451a03"/>
+            <path d="M 50 25 Q 40 10 32 18 C 38 25 48 24 50 25 Z" fill="#4ADE80" stroke="#16A34A" stroke-width="2"/>
+            <path d="M 50 25 Q 60 10 68 18 C 62 25 52 24 50 25 Z" fill="#22C55E" stroke="#16A34A" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-bold text-amber-900 mb-0.5">영쪼기와 씨앗이의</h1>
+      <h2 class="text-xl sm:text-2xl font-bold text-amber-600 mb-4">비밀 낙서장 앱 🔒</h2>
+      
+      <p class="text-base text-amber-700 mb-5">비밀번호를 입력하고 낙서장을 열어봐!</p>
+
+      <!-- Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div class="relative">
+          <input 
+            type="password" 
+            id="passwordInput"
+            placeholder="비밀번호 입력..."
+            class="w-full px-4 py-3 text-xl rounded-2xl border-2 border-amber-300 focus:border-amber-500 focus:outline-none text-center bg-white shadow-inner placeholder-amber-300"
+            autofocus
+          />
+          <button 
+            type="button" 
+            onclick="togglePasswordVisibility()" 
+            class="absolute right-3 top-3.5 text-amber-400 hover:text-amber-600 p-1"
+            title="비밀번호 보기"
+          >
+            <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <button 
+          type="submit"
+          class="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-xl rounded-2xl shadow-md active:scale-95 transition-transform border-2 border-amber-500 flex items-center justify-center gap-2"
+        >
+          <i data-lucide="key" class="w-5 h-5"></i>
+          비밀 낙서장 열기!
+        </button>
+      </form>
+
+      <!-- Incorrect Feedback Message -->
+      <div id="errorMessage" class="hidden mt-4 text-rose-600 font-bold text-lg bg-rose-100/90 py-2.5 px-3 rounded-2xl border border-rose-300 shadow-sm">
+        비밀번호를 다시 입력해줘!
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== MAIN NATIVE APP LAYOUT ==================== -->
+  <div class="flex-1 flex flex-col h-full w-full max-w-6xl mx-auto p-2 sm:p-3 gap-2 overflow-hidden">
+    
+    <!-- APP HEADER BAR -->
+    <header class="bg-amber-100/90 border-2 border-amber-200 rounded-2xl p-2.5 px-3.5 shadow-sm flex items-center justify-between gap-2 shrink-0">
+      <!-- Title & Mascots -->
+      <div class="flex items-center gap-2.5">
+        <div class="flex -space-x-2 shrink-0">
+          <div class="w-9 h-9 bg-yellow-200 rounded-full border-2 border-yellow-400 flex items-center justify-center shadow-sm">
+            <span class="text-base">🐣</span>
+          </div>
+          <div class="w-9 h-9 bg-emerald-200 rounded-full border-2 border-emerald-400 flex items-center justify-center shadow-sm">
+            <span class="text-base">🌱</span>
+          </div>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-amber-900 leading-none">영쪼기와 씨앗이의 비밀 낙서장</h1>
+          <p class="text-xs text-amber-700 hidden sm:block mt-0.5">실시간으로 자동 저장되며, 친구들과 함께 그린 그림이 보여요!</p>
+        </div>
+      </div>
+
+      <!-- Realtime Multi-User Status & Sync Indicator -->
+      <div class="flex items-center gap-2">
+        <div id="saveStatus" class="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-200">
+          <i data-lucide="cloud-check" class="w-3.5 h-3.5"></i>
+          <span>자동 저장됨</span>
+        </div>
+
+        <!-- Live Users Indicator -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-yellow-200 text-amber-950 rounded-xl text-xs font-bold border border-yellow-300 shadow-sm">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span id="onlineCountText">함께 그리는 중 👥 1명</span>
+        </div>
+
+        <button 
+          onclick="downloadCanvas()" 
+          class="flex items-center gap-1 px-3 py-1.5 bg-sky-300 hover:bg-sky-400 text-sky-950 rounded-xl text-xs sm:text-sm font-bold border border-sky-400 shadow-sm active:scale-95 transition"
+          title="이미지로 다운로드"
+        >
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">다운로드</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN APP WORKSPACE (SIDEBAR TOOLBAR + CANVAS) -->
+    <div class="flex-1 flex flex-col md:flex-row gap-2 min-h-0 overflow-hidden">
+      
+      <!-- TOOLBAR PANEL (RESPONSIVE DOCK) -->
+      <aside class="bg-amber-100/60 border-2 border-amber-200 rounded-2xl p-2.5 shadow-sm flex flex-row md:flex-col gap-2.5 md:w-64 shrink-0 overflow-x-auto md:overflow-y-auto items-center md:items-stretch">
+        
+        <!-- Tools Selection -->
+        <div class="shrink-0 w-auto md:w-full">
+          <label class="block text-xs font-bold text-amber-800 mb-1 uppercase tracking-wider hidden md:block">🎨 그리기 도구</label>
+          <div class="flex md:grid md:grid-cols-3 gap-1.5">
+            <button onclick="setTool('pen')" id="tool-pen" class="tool-btn min-w-[55px] p-2 rounded-xl border border-amber-300 bg-amber-200 text-amber-900 shadow-sm flex flex-col items-center justify-center">
+              <i data-lucide="pen-tool" class="w-4 h-4"></i>
+              <span class="text-xs mt-0.5 font-bold">펜</span>
+            </button>
+            <button onclick="setTool('highlighter')" id="tool-highlighter" class="tool-btn min-w-[55px] p-2 rounded-xl border border-amber-200 bg-white text-amber-900 hover:bg-amber-100 flex flex-col items-center justify-center">
+              <i data-lucide="highlighter" class="w-4 h-4"></i>
+              <span class="text-xs mt-0.5 font-bold">형광펜</span>
+            </button>
+            <button onclick="setTool('eraser')" id="tool-eraser" class="tool-btn min-w-[55px] p-2 rounded-xl border border-amber-200 bg-white text-amber-900 hover:bg-amber-100 flex flex-col items-center justify-center">
+              <i data-lucide="eraser" class="w-4 h-4"></i>
+              <span class="text-xs mt-0.5 font-bold">지우개</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Curated Preset Color Palette -->
+        <div class="shrink-0 w-auto md:w-full">
+          <label class="block text-xs font-bold text-amber-800 mb-1 uppercase tracking-wider hidden md:block">🌈 예쁜 파스텔 색상</label>
+          <div id="paletteGrid" class="flex md:grid md:grid-cols-6 gap-1.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- ALL ANIMAL STICKER STAMPS GRID -->
+        <div class="shrink-0 w-auto md:w-full">
+          <label class="block text-xs font-bold text-amber-800 mb-1 uppercase tracking-wider hidden md:block">🐾 귀여운 동물 이모티콘 스티커</label>
+          <div id="animalStickerGrid" class="flex md:grid md:grid-cols-5 gap-1 max-h-36 overflow-y-auto p-1 bg-white/70 rounded-xl border border-amber-200">
+            <!-- Animal stickers populated via JS -->
+          </div>
+        </div>
+
+        <!-- Brush Size Slider -->
+        <div class="shrink-0 w-32 md:w-full">
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-bold text-amber-800 uppercase tracking-wider hidden md:block">📏 크기 조절</label>
+            <span id="brushSizeVal" class="text-xs text-amber-800 font-bold">8 px</span>
+          </div>
+          <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-amber-200 shadow-inner">
+            <input 
+              type="range" 
+              id="brushSize" 
+              min="2" 
+              max="60" 
+              value="8" 
+              oninput="updateBrushSize(this.value)"
+              class="w-full accent-amber-500 cursor-pointer"
+            >
+            <div class="w-6 h-6 flex items-center justify-center shrink-0 bg-amber-50 rounded-lg border border-amber-200">
+              <div id="brushPreview" class="rounded-full bg-amber-900" style="width: 8px; height: 8px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Clear Action -->
+        <div class="pt-1 md:pt-2 md:border-t border-amber-200/60 flex flex-col gap-1.5 mt-auto w-auto md:w-full shrink-0">
+          <button onclick="confirmClearCanvas()" class="px-3 py-2 md:w-full bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-xl text-xs sm:text-sm font-bold border border-rose-300 shadow-sm flex items-center justify-center gap-1 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            모든 낙서 지우기
+          </button>
+        </div>
+
+      </aside>
+
+      <!-- CANVAS BOARD AREA -->
+      <main id="canvasContainer" class="flex-1 bg-white border-3 border-amber-200 rounded-3xl shadow-md relative flex flex-col overflow-hidden w-full h-full">
+        
+        <!-- Frame Decoration -->
+        <div class="absolute inset-0 pointer-events-none border-4 border-amber-100/50 rounded-2xl z-10"></div>
+        
+        <!-- Canvas -->
+        <canvas id="doodleCanvas" class="w-full h-full cursor-crosshair block flex-1 bg-white"></canvas>
+
+        <!-- Live Collaborative Cursors Overlay -->
+        <div id="cursorOverlay" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>
+
+        <!-- Corner Mascot Watermark -->
+        <div class="absolute top-2.5 left-3 opacity-50 pointer-events-none text-sm text-amber-700 font-bold">
+          🐣 영쪼기 & 🌱 씨앗이
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- ==================== CLEAR CONFIRM MODAL ==================== -->
+  <div id="clearConfirmModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-amber-950/40 backdrop-blur-sm">
+    <div class="bg-white border-3 border-rose-300 rounded-2xl p-5 max-w-xs w-full text-center shadow-xl animate-pop">
+      <div class="text-4xl mb-2">🗑️</div>
+      <h3 class="text-xl font-bold text-amber-900 mb-1">모든 낙서를 지울까요?</h3>
+      <p class="text-sm text-amber-700 mb-4">함께 있는 친구들의 낙서도 지워져요!</p>
+      <div class="flex justify-center gap-2">
+        <button onclick="hideClearConfirm()" class="px-4 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-xl text-base font-bold">
+          취소
+        </button>
+        <button onclick="clearCanvasRealtime(); hideClearConfirm();" class="px-4 py-2 bg-rose-400 hover:bg-rose-500 text-white rounded-xl text-base font-bold shadow">
+          지우기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden bg-amber-900 text-amber-50 px-5 py-2 rounded-full shadow-xl border-2 border-amber-400 text-base flex items-center gap-2 animate-pop">
+    <span id="toastIcon">✨</span>
+    <span id="toastMessage">메시지 내용</span>
+  </div>
+
+  <!-- ==================== APPLICATION SCRIPT ==================== -->
+  <script>
+    const CORRECT_PASSWORD = 'secret_white_board';
+    const PERSISTENT_LOCK_KEY = 'doodle_board_unlocked';
+
+    // Animal Stickers
+    const ANIMAL_STICKERS = [
+      { id: 'youngjjogi', emoji: '🐣', label: '영쪼기' },
+      { id: 'ssiati', emoji: '🌱', label: '씨앗이' },
+      { id: 'dog', emoji: '🐶', label: '강아지' },
+      { id: 'cat', emoji: '🐱', label: '고양이' },
+      { id: 'mouse', emoji: '🐭', label: '생쥐' },
+      { id: 'hamster', emoji: '🐹', label: '햄스터' },
+      { id: 'rabbit', emoji: '🐰', label: '토끼' },
+      { id: 'fox', emoji: '🦊', label: '여우' },
+      { id: 'bear', emoji: '🐻', label: '곰돌이' },
+      { id: 'panda', emoji: '🐼', label: '판다' },
+      { id: 'koala', emoji: '🐨', label: '코알라' },
+      { id: 'tiger', emoji: '🐯', label: '호랑이' },
+      { id: 'lion', emoji: '🦁', label: '사자' },
+      { id: 'cow', emoji: '🐮', label: '소' },
+      { id: 'pig', emoji: '🐷', label: '돼지' },
+      { id: 'frog', emoji: '🐸', label: '개구리' },
+      { id: 'monkey', emoji: '🐵', label: '원숭이' },
+      { id: 'chicken', emoji: '🐔', label: '닭' },
+      { id: 'penguin', emoji: '🐧', label: '펭귄' },
+      { id: 'duck', emoji: '🦆', label: '오리' },
+      { id: 'turtle', emoji: '🐢', label: '거북이' },
+      { id: 'dolphin', emoji: '🐬', label: '돌고래' },
+      { id: 'unicorn', emoji: '🦄', label: '유니콘' },
+      { id: 'bee', emoji: '🐝', label: '꿀벌' },
+      { id: 'butterfly', emoji: '🦋', label: '나비' }
+    ];
+
+    // Preset Colors
+    const PRESET_COLORS = [
+      '#451a03', '#ef4444', '#f97316', '#eab308',
+      '#22c55e', '#06b6d4', '#3b82f6', '#a855f7',
+      '#ec4899', '#f472b6', '#a7f3d0', '#ffffff'
+    ];
+
+    // Canvas & State
+    let canvas, ctx;
+    let isDrawing = false;
+    let currentTool = 'pen';
+    let currentSticker = 'youngjjogi';
+    let currentColor = '#451a03';
+    let currentBrushSize = 8;
+    let lastPoint = null;
+
+    // Drawing Store (for redrawing/resizing without data loss)
+    let drawingActions = [];
+
+    // Realtime User State
+    let myUserId = 'user_' + Math.random().toString(36).substring(2, 9);
+    let myAvatar = Math.random() > 0.5 ? '🐣' : '🌱';
+
+    window.onload = async () => {
+      lucide.createIcons();
+
+      if (localStorage.getItem(PERSISTENT_LOCK_KEY) === 'true') {
+        const lockScreen = document.getElementById('lockScreen');
+        lockScreen.classList.add('hidden');
+      }
+
+      renderPalette();
+      renderAnimalStickers();
+
+      canvas = document.getElementById('doodleCanvas');
+      ctx = canvas.getContext('2d');
+
+      setupCanvas();
+      await initFirebaseRealtime();
+    };
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const pwdInput = document.getElementById('passwordInput').value.trim();
+      const errMsg = document.getElementById('errorMessage');
+
+      if (pwdInput === CORRECT_PASSWORD) {
+        localStorage.setItem(PERSISTENT_LOCK_KEY, 'true');
+        const lockScreen = document.getElementById('lockScreen');
+        lockScreen.classList.add('opacity-0');
+        setTimeout(() => {
+          lockScreen.classList.add('hidden');
+          lockScreen.classList.remove('opacity-0');
+        }, 300);
+        showToast('🔓 비밀 낙서장에 들어온 걸 환영해!');
+      } else {
+        errMsg.classList.remove('hidden');
+        errMsg.classList.remove('animate-shake');
+        void errMsg.offsetWidth;
+        errMsg.classList.add('animate-shake');
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('passwordInput');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    function setupCanvas() {
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+
+      const container = document.getElementById('canvasContainer');
+      container.addEventListener('mousemove', syncCursorPos);
+      container.addEventListener('mouseleave', removeCursorPos);
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      redrawAllFromHistory();
+    }
+
+    function redrawAllFromHistory() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawingActions.forEach(action => {
+        if (action.type === 'stroke') {
+          renderStrokeOnLocal(action.p1, action.p2, action.tool, action.color, action.size);
+        } else if (action.type === 'sticker') {
+          renderStickerOnLocal(action.x, action.y, action.stickerType);
+        }
+      });
+    }
+
+    function renderPalette() {
+      const grid = document.getElementById('paletteGrid');
+      grid.innerHTML = '';
+      PRESET_COLORS.forEach(color => {
+        const btn = document.createElement('button');
+        btn.className = `w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 transition-transform hover:scale-110 flex items-center justify-center shrink-0 ${color === currentColor ? 'border-amber-900 scale-110 shadow-md' : 'border-white'}`;
+        btn.style.backgroundColor = color;
+        btn.onclick = () => selectColor(color, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderAnimalStickers() {
+      const grid = document.getElementById('animalStickerGrid');
+      grid.innerHTML = '';
+      ANIMAL_STICKERS.forEach(item => {
+        const btn = document.createElement('button');
+        btn.id = `sticker-${item.id}`;
+        btn.className = `sticker-btn p-1 rounded-xl border border-amber-200 bg-white text-xl hover:bg-amber-100 transition flex items-center justify-center ${item.id === currentSticker ? 'ring-2 ring-amber-500 bg-amber-100' : ''}`;
+        btn.title = item.label;
+        btn.innerHTML = item.emoji;
+        btn.onclick = () => setSticker(item.id);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectColor(color, element) {
+      currentColor = color;
+      if (currentTool === 'eraser') setTool('pen');
+
+      document.querySelectorAll('#paletteGrid button').forEach(b => {
+        b.classList.remove('border-amber-900', 'scale-110', 'shadow-md');
+        b.classList.add('border-white');
+      });
+      if (element) {
+        element.classList.remove('border-white');
+        element.classList.add('border-amber-900', 'scale-110', 'shadow-md');
+      }
+      updateBrushPreview();
+    }
+
+    function updateBrushSize(val) {
+      currentBrushSize = parseInt(val, 10);
+      document.getElementById('brushSizeVal').innerText = `${currentBrushSize} px`;
+      updateBrushPreview();
+    }
+
+    function updateBrushPreview() {
+      const preview = document.getElementById('brushPreview');
+      const size = Math.min(Math.max(currentBrushSize, 4), 22);
+      preview.style.width = `${size}px`;
+      preview.style.height = `${size}px`;
+      preview.style.backgroundColor = currentTool === 'eraser' ? '#cbd5e1' : currentColor;
+    }
+
+    function setTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-200', 'text-amber-900', 'border-amber-300');
+        btn.classList.add('bg-white', 'text-amber-900', 'border-amber-200');
+      });
+      document.querySelectorAll('.sticker-btn').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-100');
+      });
+
+      const activeBtn = document.getElementById(`tool-${tool}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-amber-900', 'border-amber-200');
+        activeBtn.classList.add('bg-amber-200', 'text-amber-900', 'border-amber-300');
+      }
+      updateBrushPreview();
+    }
+
+    function setSticker(stickerName) {
+      currentTool = 'sticker';
+      currentSticker = stickerName;
+
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-200', 'text-amber-900', 'border-amber-300');
+        btn.classList.add('bg-white', 'text-amber-900', 'border-amber-200');
+      });
+      document.querySelectorAll('.sticker-btn').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-100');
+      });
+
+      const activeStickerBtn = document.getElementById(`sticker-${stickerName}`);
+      if (activeStickerBtn) {
+        activeStickerBtn.classList.add('ring-2', 'ring-amber-500', 'bg-amber-100');
+      }
+    }
+
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height
+      };
+    }
+
+    function handleTouchStart(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+      }
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        draw({ clientX: touch.clientX, clientY: touch.clientY });
+      }
+    }
+
+    function startDrawing(e) {
+      const normCoords = getCanvasCoords(e);
+
+      if (currentTool === 'sticker') {
+        const action = {
+          type: 'sticker', x: normCoords.x, y: normCoords.y,
+          stickerType: currentSticker, senderId: myUserId, timestamp: Date.now()
+        };
+        drawingActions.push(action);
+        renderStickerOnLocal(normCoords.x, normCoords.y, currentSticker);
+        broadcastAction(action);
+        return;
+      }
+
+      isDrawing = true;
+      lastPoint = normCoords;
+    }
+
+    function draw(e) {
+      if (!isDrawing || !lastPoint) return;
+      const normCoords = getCanvasCoords(e);
+
+      const action = {
+        type: 'stroke', p1: lastPoint, p2: normCoords,
+        tool: currentTool, color: currentColor, size: currentBrushSize,
+        senderId: myUserId, timestamp: Date.now()
+      };
+
+      drawingActions.push(action);
+      renderStrokeOnLocal(lastPoint, normCoords, currentTool, currentColor, currentBrushSize);
+      broadcastAction(action);
+
+      lastPoint = normCoords;
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+      lastPoint = null;
+    }
+
+    function renderStrokeOnLocal(p1, p2, tool, color, size) {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(p1.x * w, p1.y * h);
+      ctx.lineTo(p2.x * w, p2.y * h);
+
+      ctx.lineWidth = size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (tool === 'pen') {
+        ctx.globalAlpha = 1.0;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = color;
+      } else if (tool === 'highlighter') {
+        ctx.globalAlpha = 0.35;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = color;
+      } else if (tool === 'eraser') {
+        ctx.globalAlpha = 1.0;
+        ctx.globalCompositeOperation = 'destination-out';
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderStickerOnLocal(normX, normY, type) {
+      const x = normX * canvas.width;
+      const y = normY * canvas.height;
+
+      ctx.save();
+      ctx.translate(x, y);
+      const size = Math.max(currentBrushSize * 4, 34);
+
+      if (type === 'youngjjogi') {
+        drawYoungjjogiMascot(ctx, size);
+      } else if (type === 'ssiati') {
+        drawSsiatiMascot(ctx, size);
+      } else {
+        const found = ANIMAL_STICKERS.find(s => s.id === type);
+        const emoji = found ? found.emoji : '🐾';
+        ctx.font = `${size}px 'Lee Seo Yun', 'LeeSeoYun', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, 0, 0);
+      }
+      ctx.restore();
+    }
+
+    function drawYoungjjogiMascot(context, size) {
+      const scale = size / 60;
+      context.scale(scale, scale);
+
+      context.beginPath();
+      context.ellipse(0, 5, 25, 22, 0, 0, Math.PI * 2);
+      context.fillStyle = '#FEF08A';
+      context.fill();
+      context.lineWidth = 2;
+      context.strokeStyle = '#EAB308';
+      context.stroke();
+
+      context.beginPath();
+      context.arc(-9, 0, 3, 0, Math.PI * 2);
+      context.arc(9, 0, 3, 0, Math.PI * 2);
+      context.fillStyle = '#451a03';
+      context.fill();
+
+      context.beginPath();
+      context.ellipse(-14, 5, 4, 2, 0, 0, Math.PI * 2);
+      context.ellipse(14, 5, 4, 2, 0, 0, Math.PI * 2);
+      context.fillStyle = '#FCA5A5';
+      context.fill();
+
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.lineTo(-5, 6);
+      context.lineTo(5, 6);
+      context.closePath();
+      context.fillStyle = '#F97316';
+      context.fill();
+    }
+
+    function drawSsiatiMascot(context, size) {
+      const scale = size / 60;
+      context.scale(scale, scale);
+
+      context.beginPath();
+      context.moveTo(0, -20);
+      context.bezierCurveTo(-22, -5, -22, 22, 0, 22);
+      context.bezierCurveTo(22, 22, 22, -5, 0, -20);
+      context.fillStyle = '#D97706';
+      context.fill();
+      context.lineWidth = 2;
+      context.strokeStyle = '#92400E';
+      context.stroke();
+
+      context.beginPath();
+      context.moveTo(0, -10);
+      context.bezierCurveTo(-14, 0, -14, 18, 0, 18);
+      context.bezierCurveTo(14, 18, 14, 0, 0, -10);
+      context.fillStyle = '#FDE68A';
+      context.fill();
+
+      context.beginPath();
+      context.arc(-6, 3, 2.5, 0, Math.PI * 2);
+      context.arc(6, 3, 2.5, 0, Math.PI * 2);
+      context.fillStyle = '#451a03';
+      context.fill();
+
+      context.beginPath();
+      context.moveTo(0, -20);
+      context.quadraticCurveTo(-10, -32, -18, -25);
+      context.quadraticCurveTo(-10, -18, 0, -20);
+      context.fillStyle = '#4ADE80';
+      context.fill();
+
+      context.beginPath();
+      context.moveTo(0, -20);
+      context.quadraticCurveTo(10, -32, 18, -25);
+      context.quadraticCurveTo(10, -18, 0, -20);
+      context.fillStyle = '#22C55E';
+      context.fill();
+    }
+
+    function confirmClearCanvas() {
+      document.getElementById('clearConfirmModal').classList.remove('hidden');
+    }
+
+    function hideClearConfirm() {
+      document.getElementById('clearConfirmModal').classList.add('hidden');
+    }
+
+    // ==================== REALTIME COLLABORATION & AUTOSAVE ====================
+    let isFirebaseReady = false;
+
+    async function initFirebaseRealtime() {
+      if (!window.fb) return;
+      const { auth, db, appId, collection, doc, setDoc, onSnapshot, signInAnonymously, signInWithCustomToken } = window.fb;
+
+      try {
+        if (typeof __initial_auth_token !== 'undefined') {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        isFirebaseReady = true;
+
+        // Listen for Realtime Drawing Actions
+        const actionsCol = collection(db, 'artifacts', appId, 'public', 'data', 'drawing_actions');
+        onSnapshot(actionsCol, (snapshot) => {
+          let hasNewActions = false;
+
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const data = change.doc.data();
+              if (data.type === 'clear') {
+                drawingActions = [];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (data.senderId !== myUserId) {
+                  showToast('🧹 친구가 캔버스를 지웠어요.');
+                }
+              } else {
+                drawingActions.push(data);
+                if (data.senderId !== myUserId) {
+                  if (data.type === 'stroke') {
+                    renderStrokeOnLocal(data.p1, data.p2, data.tool, data.color, data.size);
+                  } else if (data.type === 'sticker') {
+                    renderStickerOnLocal(data.x, data.y, data.stickerType);
+                  }
+                }
+              }
+              hasNewActions = true;
+            }
+          });
+
+          if (hasNewActions) {
+            showSaveStatus();
+          }
+        }, (err) => console.log('Firestore snapshot error:', err));
+
+        // Presence Listener
+        const presenceCol = collection(db, 'artifacts', appId, 'public', 'data', 'user_presence');
+        onSnapshot(presenceCol, (snapshot) => {
+          const overlay = document.getElementById('cursorOverlay');
+          overlay.innerHTML = '';
+          let onlineUsers = 0;
+
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            onlineUsers++;
+            if (docSnap.id !== myUserId && data.x !== undefined && data.y !== undefined && data.x >= 0) {
+              const cursorEl = document.createElement('div');
+              cursorEl.className = 'absolute transition-all duration-75 flex items-center gap-1 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full shadow-md text-xs pointer-events-none';
+              cursorEl.style.left = `${data.x * 100}%`;
+              cursorEl.style.top = `${data.y * 100}%`;
+              cursorEl.innerHTML = `<span>${data.avatar || '🐣'}</span> <span>친구</span>`;
+              overlay.appendChild(cursorEl);
+            }
+          });
+
+          document.getElementById('onlineCountText').innerText = `함께 그리는 중 👥 ${Math.max(onlineUsers, 1)}명`;
+        }, (err) => console.log('Presence listener error:', err));
+
+      } catch (err) {
+        console.error('Firebase initialization error:', err);
+      }
+    }
+
+    function broadcastAction(action) {
+      if (!isFirebaseReady || !window.fb) return;
+      const { db, appId, collection, doc, setDoc } = window.fb;
+
+      const actionDoc = doc(collection(db, 'artifacts', appId, 'public', 'data', 'drawing_actions'));
+      setDoc(actionDoc, action).catch(e => console.log(e));
+    }
+
+    async function clearCanvasRealtime() {
+      drawingActions = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!isFirebaseReady || !window.fb) return;
+      const { db, appId, collection, doc, setDoc, getDocs, deleteDoc } = window.fb;
+
+      // Broadcast Clear Event
+      const actionDoc = doc(collection(db, 'artifacts', appId, 'public', 'data', 'drawing_actions'));
+      setDoc(actionDoc, {
+        type: 'clear', senderId: myUserId, timestamp: Date.now()
+      }).catch(e => console.log(e));
+
+      // Clean up previous history in Firestore
+      try {
+        const actionsCol = collection(db, 'artifacts', appId, 'public', 'data', 'drawing_actions');
+        const docs = await getDocs(actionsCol);
+        docs.forEach(async (d) => {
+          if (d.id !== actionDoc.id) {
+            await deleteDoc(d.ref);
+          }
+        });
+      } catch (e) {
+        console.log(e);
+      }
+
+      showToast('✨ 깨끗하게 지워졌어요!');
+    }
+
+    function syncCursorPos(e) {
+      if (!isFirebaseReady || !window.fb) return;
+      const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+
+      const { db, appId, doc, setDoc } = window.fb;
+      const userDoc = doc(db, 'artifacts', appId, 'public', 'data', 'user_presence', myUserId);
+      setDoc(userDoc, {
+        x, y, avatar: myAvatar, lastSeen: Date.now()
+      }, { merge: true }).catch(() => {});
+    }
+
+    function removeCursorPos() {
+      if (!isFirebaseReady || !window.fb) return;
+      const { db, appId, doc, setDoc } = window.fb;
+      const userDoc = doc(db, 'artifacts', appId, 'public', 'data', 'user_presence', myUserId);
+      setDoc(userDoc, { x: -1, y: -1 }, { merge: true }).catch(() => {});
+    }
+
+    let saveTimeout;
+    function showSaveStatus() {
+      const statusEl = document.getElementById('saveStatus');
+      statusEl.classList.remove('hidden');
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        statusEl.classList.add('hidden');
+      }, 2000);
+    }
+
+    function downloadCanvas() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      tempCtx.fillStyle = '#ffffff';
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.drawImage(canvas, 0, 0);
+
+      const link = document.createElement('a');
+      link.download = `영쪼기와_씨앗이_비밀낙서_${Date.now()}.png`;
+      link.href = tempCanvas.toDataURL('image/png');
+      link.click();
+
+      showToast('📥 낙서장이 이미지로 저장되었어요!');
+    }
+
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMessage');
+      
+      msgEl.innerText = msg;
+      toast.classList.remove('hidden');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
